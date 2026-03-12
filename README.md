@@ -1,0 +1,1 @@
+# anti-promo-emails

@@ -17,26 +17,25 @@ CREDENTIALS_DIR = Path(os.getenv("GMAIL_CREDENTIALS_DIR", "./gmail_credentials")
 def get_gmail_service(account_email: str):
     """Get authenticated Gmail API service for an account."""
     token_path = CREDENTIALS_DIR / f"token_{account_email.replace('@', '_at_')}.json"
-    creds_path = CREDENTIALS_DIR / f"credentials_{account_email.replace('@', '_at_')}.json"
 
-    creds = None
-    if token_path.exists():
-        creds = Credentials.from_authorized_user_file(str(token_path), SCOPES)
+    if not token_path.exists():
+        raise FileNotFoundError(
+            f"No token found for {account_email}. "
+            f"Please authorize this account via Settings → Gmail Accounts."
+        )
 
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
+    creds = Credentials.from_authorized_user_file(str(token_path), SCOPES)
+
+    if not creds.valid:
+        if creds.expired and creds.refresh_token:
             creds.refresh(Request())
+            with open(token_path, "w") as f:
+                f.write(creds.to_json())
         else:
-            if not creds_path.exists():
-                raise FileNotFoundError(
-                    f"No credentials found for {account_email}. "
-                    f"Please place credentials JSON at {creds_path}"
-                )
-            flow = InstalledAppFlow.from_client_secrets_file(str(creds_path), SCOPES)
-            creds = flow.run_local_server(port=0)
-
-        with open(token_path, "w") as f:
-            f.write(creds.to_json())
+            raise RuntimeError(
+                f"Token for {account_email} is invalid. "
+                f"Please re-authorize via Settings → Gmail Accounts."
+            )
 
     return build("gmail", "v1", credentials=creds)
 

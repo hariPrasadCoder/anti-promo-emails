@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import SidebarNav from '../components/SidebarNav'
 
 export const metadata: Metadata = {
   title: 'Anti-Promo Email Optimizer',
@@ -13,7 +14,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-gray-950 text-gray-100 min-h-screen">{children}</body>
+      <body className="bg-gray-950 text-gray-100 min-h-screen flex">
+        <SidebarNav />
+        <div className="flex-1 min-w-0 overflow-auto">
+          {children}
+        </div>
+      </body>
     </html>
   )
 }
